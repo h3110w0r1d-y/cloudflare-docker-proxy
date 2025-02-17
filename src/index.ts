@@ -76,12 +76,11 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 		});
 
 		if (resp.status === 401) {
-			const newHeaders = new Headers(resp.headers);
-			const wwwAuthenticate = newHeaders.get('www-authenticate');
+			resp = new Response(resp.body, resp);
+			const wwwAuthenticate = resp.headers.get('www-authenticate');
 			if (wwwAuthenticate) {
-				newHeaders.set('www-authenticate', replaceAuthenticate(wwwAuthenticate, url.hostname));
+				resp.headers.set('www-authenticate', replaceAuthenticate(wwwAuthenticate, url.hostname));
 			}
-			resp = new Response(resp.body, { ...resp, headers: newHeaders });
 		}
 		return resp;
 	}
@@ -99,17 +98,15 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 		const location = resp.headers.get('location');
 		if (!location) return resp;
 		newReq = new Request(location, { method: request.method });
-		resp = await fetch(newReq);
-		return resp;
+		return fetch(newReq);
 	}
 
 	if (resp.status === 401) {
-		const newHeaders = new Headers(resp.headers);
-		const wwwAuthenticate = newHeaders.get('www-authenticate');
+		resp = new Response(resp.body, resp);
+		const wwwAuthenticate = resp.headers.get('www-authenticate');
 		if (wwwAuthenticate) {
-			newHeaders.set('www-authenticate', replaceAuthenticate(wwwAuthenticate, url.hostname));
+			resp.headers.set('www-authenticate', replaceAuthenticate(wwwAuthenticate, url.hostname));
 		}
-		resp = new Response(resp.body, { ...resp, headers: newHeaders });
 	}
 
 	return resp;
